@@ -25,7 +25,8 @@ data "aws_iam_policy_document" "ec2_policies" {
     effect  = "Allow"
     actions = [
       "ecr:*",
-      "s3:*"
+      "s3:*",
+      "managedblockchain:*"
     ]
     resources = [
       "*"
