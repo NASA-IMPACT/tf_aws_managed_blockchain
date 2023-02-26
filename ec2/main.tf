@@ -34,15 +34,4 @@ resource "aws_instance" "ec2_instance" {
 }
 
 
-resource "aws_vpc_endpoint" "blockchain_vpc_endpoint" {
-  vpc_id       = var.vpc_id
-  service_name = var.service_name
-  vpc_endpoint_type = "Interface"
-  private_dns_enabled = true
-  subnet_ids = [var.subnet_id]
-  security_group_ids = var.security_groups_list
 
-  tags = {
-    Environment = "${var.prefix}-vpc_endpoint"
-  }
-}

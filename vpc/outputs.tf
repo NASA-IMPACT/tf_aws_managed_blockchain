@@ -1,3 +1,3 @@
-output "vpc_id" {
-  value = aws_vpc.blockchain_vpc.id
+output "vpc_endpoint" {
+  value = aws_vpc_endpoint.blockchain_vpc_endpoint.id
 }

@@ -53,7 +53,7 @@ variable "blockchain_protocol_framework" {
 }
 variable "blockchain_protocol_framework_version" {
   description = "The version of the blockchain protocol to use"
-  default = "1.4"
+  default = "2.2"
 }
 
 variable "vpc_id" {

@@ -24,3 +24,4 @@ output "ec2_profile_arn" {
 output "bc_sevice_endpoint" {
   value = module.blockchain.managed_blockchain_service_endpoint
 }
+

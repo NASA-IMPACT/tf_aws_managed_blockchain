@@ -110,3 +110,7 @@ variable "blockchain_protocol_framework" {
 variable "blockchain_protocol_framework_version" {
   description = "The version of the blockchain protocol to use"
 }
+variable "bc_peer_node_count" {
+  description = "Number of peer nodes associated with the network"
+  type = number
+}

@@ -20,8 +20,6 @@ Metadata:
           - MemberDescription
           - MemberAdminUsername
           - MemberAdminPassword
-          - PeerNodeAvailabilityZone
-          - PeerNodeInstanceType
     ParameterLabels:
       NetworkName:
         default: Network name
@@ -47,10 +45,7 @@ Metadata:
         default: Member admin username
       MemberAdminPassword:
         default: Member admin password
-      PeerNodeAvailabilityZone:
-        default: Peer node Availability Zone
-      PeerNodeInstanceType:
-        default: Instance type
+
 Parameters:
   NetworkName:
     Description: The name of your Amazon Managed Blockchain network.
@@ -69,7 +64,7 @@ Parameters:
   FrameworkVersion:
     Description: The version of the blockchain protocol to use
     Type: String
-    Default: 1.4
+    Default: 2.2
   Edition:
     Description: Setting that determines the number of peer nodes per member and the selection of instance types that can be used for them.
     ConstraintDescription: Must be STARTER or STANDARD
@@ -131,30 +126,8 @@ Parameters:
     MaxValue: 168
     Default: 24
     Type: Number
-  PeerNodeAvailabilityZone:
-    Description: The Availability Zone for your first peer node.
-    Default: us-east-1a
-    Type: String
-  PeerNodeInstanceType:
-    Description: The type of compute instance to use for your peer nodes.
-    Default: bc.t3.small
-    Type: String
-    AllowedValues:
-      - bc.t3.small
-      - bc.t3.medium
-      - bc.t3.large
-      - bc.t3.xlarge
-      - bc.m5.large
-      - bc.m5.xlarge
-      - bc.m5.2xlarge
-      - bc.m5.4xlarge
-      - bc.c5.large
-      - bc.c5.xlarge
-      - bc.c5.2xlarge
-      - bc.c5.4xlarge
-    ConstraintDescription: >-
-      If Edition is STARTER, then this value must be bc.t3.small
-      or bc.t3.medium.
+
+
 Resources:
   Member:
     Type: "AWS::ManagedBlockchain::Member"
@@ -179,23 +152,12 @@ Resources:
           MemberFabricConfiguration:
             AdminUsername: !Ref MemberAdminUsername
             AdminPassword: !Ref MemberAdminPassword
-  MemberPeerNode:
-    Type: "AWS::ManagedBlockchain::Node"
-    Properties:
-      NetworkId: !GetAtt Member.NetworkId
-      MemberId: !GetAtt Member.MemberId
-      NodeConfiguration:
-        InstanceType: !Ref PeerNodeInstanceType
-        AvailabilityZone: !Ref PeerNodeAvailabilityZone
-    DependsOn: Member
 Outputs:
   MemberId:
     Description: member id
     Value: !GetAtt Member.MemberId
     Export:
       Name: !Sub "${MemberName}-MemberId"
-
-
   MemberName:
     Description: member name
     Value: !Sub "member-${MemberName}"

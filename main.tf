@@ -87,12 +87,22 @@ module "ec2_node2" {
   networkid = module.blockchain.managed_blockchain_NetworkId
   networkname = module.blockchain.managed_blockchain_NetworkName
   networkversion = module.blockchain.managed_blockchain_FrameworkVersion
-  service_name = module.blockchain.managed_blockchain_service_endpoint
   vpc_id = var.vpc_id
   instance_type = var.instance_type
   channel_id     = "channelb"
   channel_codename = "mychb"
 }
+module "vpc_endpoint" {
+  source = "./vpc"
+
+  prefix               = var.prefix
+  security_groups_list = [module.security_groups.sg_id]
+  service_name         = module.blockchain.managed_blockchain_service_endpoint
+  subnet_id            = var.subnet_id
+  vpc_id               = var.vpc_id
+}
+
+
 
 #
 #module "elb" {
