@@ -31,7 +31,7 @@ resource "aws_cloudformation_stack" "aws_blockchain" {
 resource "aws_cloudformation_stack" "aws_peer_node" {
   count = var.bc_peer_node_count > 1 ? var.bc_peer_node_count : 1
   depends_on = [aws_cloudformation_stack.aws_blockchain]
-  name = "${var.prefix}-peer-node-stack"
+  name = "${var.prefix}-peer-node-stack-${count.index}"
     parameters = {
     NetworkId = aws_cloudformation_stack.aws_blockchain.outputs.NetworkId
     MemberId = aws_cloudformation_stack.aws_blockchain.outputs.MemberId

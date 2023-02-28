@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: Amazon Managed Blockchain. Creates network with a single member and peer node
+Description: Amazon Managed Blockchain. Creates network with a single member
 Metadata:
   LICENSE: Apache License Version 2.0
   AWS::CloudFormation::Interface:
