@@ -17,7 +17,7 @@ output "bc_member_admin_username" {
 output "bc_ec2_ip" {
 
   value = [
-    for ec2 in module.ec2_client : "IP:${ec2.ec2_ip} Key_Name: ${ec2.ec2_instance_key_name}"
+    for ec2 in module.ec2_client : "IP:${ec2.ec2_ip} Key_Name: ${ec2.ec2_instance_key_name} Channel: ${ec2.channel_id}"
   ]
 
 }

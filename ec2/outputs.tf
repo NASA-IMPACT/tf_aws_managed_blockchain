@@ -9,3 +9,7 @@ output "ec2_instance_id" {
 output "ec2_instance_key_name" {
   value = aws_instance.ec2_instance.key_name
 }
+
+output "channel_id" {
+  value = var.channel_id
+}
