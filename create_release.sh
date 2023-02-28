@@ -20,7 +20,7 @@ function create_zip_file() {
   DESTINATION_DIR=${PWD}/dist
   rm -rf ${DESTINATION_DIR}
   mkdir -p ${BUILD_DIR} ${DESTINATION_DIR}
-  cp -r application platform ${BUILD_DIR}
+  cp -r blockchain elb vpc ec2 iam sg ${BUILD_DIR}
   cp *tf ${BUILD_DIR}
   cp *py ${BUILD_DIR}
   cd ${BUILD_DIR}
