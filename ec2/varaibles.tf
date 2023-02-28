@@ -62,5 +62,6 @@ variable "memberid" {
 variable "vpc_id" {
 
 }
-
+variable "member_node_id" {
+}
 

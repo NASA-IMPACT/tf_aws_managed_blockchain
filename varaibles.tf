@@ -1,9 +1,9 @@
 variable "prefix" {
-  default = "bcamarouane"
+type = string
 }
 variable "network_name" {
   type = string
-  default = "blockchain1234"
+
 }
 variable "network_description" {
   default = "Network for tracking files and sharing them between organisations"
@@ -27,7 +27,6 @@ variable "network_proposal_duration_in_hours" {
 
 variable "member_name" {
   type = string
-  default = "mamarouane"
 }
 variable "member_description" {
   type = string
@@ -35,11 +34,9 @@ variable "member_description" {
 }
 variable "member_admin_username" {
   description = "The user name of your member's admin user."
-  default = "amarouane"
 }
 variable "member_admin_password" {
   description = "The password of your member's admin user."
-  default = "Amarouanedminpwd1!"
 }
 
 variable "peernode_instance_type" {
@@ -57,18 +54,16 @@ variable "blockchain_protocol_framework_version" {
 }
 
 variable "vpc_id" {
-  default = "vpc-068cae278b205376f"
+type = string
 }
 variable "ami_id" {
-  default = "ami-0dfcb1ef8550277af"
+  description = "AMI ID for the EC2 cli"
 }
 variable "subnet_id" {
-  default = "subnet-00806dd9f5ff7fb34"
+type = string
 }
 
-variable "with_userdata" {
- default = true
-}
+
 
 variable "description" {
 default = "Blockchain instance"
@@ -78,6 +73,18 @@ variable "tag_name" {
   default = "BC cli EC2"
 }
 
-variable "instance_type" {
- default = "t2.medium"
+
+variable "bc_peer_node_count" {
+  description = "Number of peer nodes associated with the network"
+  type = number
+  default = 1
+}
+
+variable "ec2_cli_configuration" {
+  type = list(object({
+    key_pair_name = string,
+    channel_id = string,
+    channel_codename = string
+    instance_type = string
+  }))
 }

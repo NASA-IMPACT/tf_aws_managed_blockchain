@@ -11,6 +11,20 @@ data "aws_region" "current" {}
 locals {
   account_id = data.aws_caller_identity.current.id
   aws_region = data.aws_region.current.name
+  ec2_cli_count = flatten([
+      for indx, bc_channel in var.ec2_cli_configuration : {
+      indx = indx
+      channel_id  = bc_channel.channel_id
+      channel_codename = bc_channel.channel_codename
+      key_pair_name = bc_channel.key_pair_name
+      instance_type = bc_channel.instance_type
+      }
+  ])
+
+
+    channel_map = {
+    for ch in local.ec2_cli_count: ch.channel_id => ch
+  }
 }
 
 
@@ -20,7 +34,7 @@ module "blockchain" {
   blockchain_edition = var.blockchain_edition
   blockchain_protocol_framework = var.blockchain_protocol_framework
   blockchain_protocol_framework_version = var.blockchain_protocol_framework_version
-  member_admin_password = "Pxyzssword!124"
+  member_admin_password = var.member_admin_password
   member_admin_username = var.member_admin_username
   member_description = var.member_description
   member_name = var.member_name
@@ -31,6 +45,7 @@ module "blockchain" {
   network_threshold_percentage = var.network_threshold_percentage
   peernode_availabilityzone = "${local.aws_region}a"
   peernode_instance_type = var.peernode_instance_type
+  bc_peer_node_count = var.bc_peer_node_count
 }
 
 module "security_groups" {
@@ -42,36 +57,13 @@ module "ec2_iam_role" {
   source = "./iam"
   prefix = var.prefix
 }
-#
-#module "ec2_node" {
-#  source = "./ec2"
-##  ami_id = "ami-0434d5878c6ad6d4c"
-#  ami_id = var.ami_id
-#  key_name = "amarouane"
-#  prefix = var.prefix
-#  security_groups_list = [module.security_groups.sg_id]
-#  subnet_id = var.subnet_id
-#  with_userdata = var.with_userdata
-#  ec2_profile_name = module.ec2_iam_role.profile_name
-#  description = var.description
-#  tag_name = var.tag_name
-#  user_data_path = "${path.module}/ec2/ec2_user_data.tpl"
-#  adminpwd = ""
-#  adminuser = ""
-#  memberid = ""
-#  membername = ""
-#  networkid = ""
-#  networkname = ""
-#  networkversion = ""
-#}
 
 
 
-
-module "ec2_node2" {
+module "ec2_client" {
+  for_each = local.channel_map
   source = "./ec2"
-  ami_id = "ami-0434d5878c6ad6d4c"
-  key_name = "amarouane"
+  ami_id = var.ami_id
   prefix = var.prefix
   security_groups_list = [module.security_groups.sg_id]
   subnet_id = var.subnet_id
@@ -88,9 +80,11 @@ module "ec2_node2" {
   networkname = module.blockchain.managed_blockchain_NetworkName
   networkversion = module.blockchain.managed_blockchain_FrameworkVersion
   vpc_id = var.vpc_id
-  instance_type = var.instance_type
-  channel_id     = "channelb"
-  channel_codename = "mychb"
+  instance_type = local.channel_map[each.key].instance_type
+  key_name = local.channel_map[each.key].key_pair_name
+  channel_id     = local.channel_map[each.key].channel_id
+  channel_codename = local.channel_map[each.key].channel_codename
+  member_node_id = module.blockchain.managed_blockchain_MemberPeerNodeId[local.channel_map[each.key].indx]
 }
 module "vpc_endpoint" {
   source = "./vpc"
@@ -102,13 +96,3 @@ module "vpc_endpoint" {
   vpc_id               = var.vpc_id
 }
 
-
-
-#
-#module "elb" {
-#  source = "./elb"
-#  blockchain_ec2_cli_id = module.ec2_node2.ec2_instance_id
-#  prefix = var.prefix
-#  pub_sub = var.subnet_id
-#  security_groups = module.security_groups.sg_id
-#}

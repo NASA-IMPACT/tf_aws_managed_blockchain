@@ -183,11 +183,6 @@ Outputs:
     Value: !Ref FrameworkVersion
     Export:
       Name: !Sub "${NetworkName}-FrameworkVersion"
-  MemberPeerNodeId:
-    Description: member peer node Id
-    Value: !GetAtt MemberPeerNode.NodeId
-    Export:
-      Name: !Sub "${MemberName}-MemberPeerNodeId"
   MemberAdminUsername:
     Description: fabric admin user name
     Value: !Ref MemberAdminUsername

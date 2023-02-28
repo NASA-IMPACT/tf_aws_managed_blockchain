@@ -22,7 +22,7 @@ output "managed_blockchain_FrameworkVersion" {
   value = aws_cloudformation_stack.aws_blockchain.outputs.FrameworkVersion
 }
 output "managed_blockchain_MemberPeerNodeId" {
-  value = aws_cloudformation_stack.aws_blockchain.outputs.MemberPeerNodeId
+  value = aws_cloudformation_stack.aws_peer_node[*].outputs.MemberPeerNodeId
 }
 
 output "managed_blockchain_MemberAdminUsername" {

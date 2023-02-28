@@ -22,7 +22,7 @@ pip install --upgrade awscli
 VpcEndpointServiceName=$(aws managedblockchain get-network --region ${REGION} --network-id ${NETWORKID}  --query 'Network.VpcEndpointServiceName' --output text)
 OrderingServiceEndpoint=$(aws managedblockchain get-network --region ${REGION}  --network-id ${NETWORKID}  --query 'Network.FrameworkAttributes.Fabric.OrderingServiceEndpoint' --output text)
 CaEndpoint=$(aws managedblockchain get-member --region ${REGION}  --network-id ${NETWORKID}  --member-id ${MEMBERID}  --query 'Member.FrameworkAttributes.Fabric.CaEndpoint' --output text)
-nodeID=$(aws managedblockchain list-nodes --region ${REGION}  --network-id ${NETWORKID}  --member-id ${MEMBERID}  --query 'Nodes[?Status==`AVAILABLE`] | [0].Id' --output text)
+nodeID=${MEMEBERNODEID}
 peerEndpoint=$(aws managedblockchain get-node --region ${REGION}  --network-id ${NETWORKID}  --member-id ${MEMBERID}  --node-id $nodeID --query 'Node.FrameworkAttributes.Fabric.PeerEndpoint' --output text)
 peerEventEndpoint=$(aws managedblockchain get-node --region ${REGION}  --network-id ${NETWORKID}  --member-id ${MEMBERID}  --node-id $nodeID --query 'Node.FrameworkAttributes.Fabric.PeerEventEndpoint' --output text)
 
@@ -57,11 +57,11 @@ export CHAINCODEVERSION=v0
 export CHAINCODEDIR=github.com/chaincode_example02/go
 EOF2
 aws s3 cp s3://us-east-1.managedblockchain/etc/managedblockchain-tls-chain.pem  /home/ec2-user/managedblockchain-tls-chain.pem
-source ~/peer-exports.sh
-fabric-ca-client enroll -u https://${ADMINUSER}:${ADMINPWD}@$CASERVICEENDPOINT --tls.certfiles /home/ec2-user/managedblockchain-tls-chain.pem -M /home/ec2-user/admin-msp
-echo https://${ADMINUSER}:${ADMINPWD}@$CASERVICEENDPOINT  >> /tmp/api_url.txt
+source /home/ec2-user/peer-exports.sh
+fabric-ca-client enroll -u https://${ADMINUSER}:${ADMINPWD}@\$CASERVICEENDPOINT --tls.certfiles /home/ec2-user/managedblockchain-tls-chain.pem -M /home/ec2-user/admin-msp
+echo https://${ADMINUSER}:${ADMINPWD}@\$CASERVICEENDPOINT  >> /tmp/api_url.txt
 mkdir -p /home/ec2-user/admin-msp/admincerts
-cp ~/admin-msp/signcerts/* ~/admin-msp/admincerts/
+cp /home/ec2-user/admin-msp/signcerts/* /home/ec2-user/admin-msp/admincerts/
 EOF1
 
 sudo -u ec2-user -i <<EOF1

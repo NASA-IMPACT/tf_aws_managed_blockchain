@@ -1,6 +1,7 @@
 data "aws_region" "current" {}
 
 
+
 resource "aws_instance" "ec2_instance" {
   ami = var.ami_id
   subnet_id = var.subnet_id
@@ -28,6 +29,7 @@ resource "aws_instance" "ec2_instance" {
     REGION = data.aws_region.current.name
     CHANNELID = var.channel_id
     CHANNELCODENAME = var.channel_codename
+    MEMEBERNODEID = var.member_node_id
 
   } ) : null
   vpc_security_group_ids = var.security_groups_list

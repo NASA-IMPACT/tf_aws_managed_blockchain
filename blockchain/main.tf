@@ -17,9 +17,6 @@ resource "aws_cloudformation_stack" "aws_blockchain" {
     MemberDescription = var.member_description
     MemberAdminUsername = var.member_admin_username
     MemberAdminPassword = var.member_admin_password
-    PeerNodeAvailabilityZone = var.peernode_availabilityzone
-    PeerNodeInstanceType = var.peernode_instance_type
-
   }
 
   template_body = file("${path.module}/managed_blockchain_template.yml")
