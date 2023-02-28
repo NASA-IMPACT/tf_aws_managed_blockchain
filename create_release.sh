@@ -22,7 +22,6 @@ function create_zip_file() {
   mkdir -p ${BUILD_DIR} ${DESTINATION_DIR}
   cp -r blockchain elb vpc ec2 iam sg ${BUILD_DIR}
   cp *tf ${BUILD_DIR}
-  cp *py ${BUILD_DIR}
   cd ${BUILD_DIR}
   zip -r9 ${RELEASE_NAME}.zip .
   mv ${RELEASE_NAME}.zip ${DESTINATION_DIR}/.
