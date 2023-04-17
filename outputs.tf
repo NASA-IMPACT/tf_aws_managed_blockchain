@@ -32,3 +32,4 @@ output "bc_sevice_endpoint" {
 output "node_ids" {
   value = module.blockchain.managed_blockchain_MemberPeerNodeId
 }
+

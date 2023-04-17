@@ -13,3 +13,4 @@ output "ec2_instance_key_name" {
 output "channel_id" {
   value = var.channel_id
 }
+

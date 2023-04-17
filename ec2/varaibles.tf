@@ -21,7 +21,7 @@ variable "description" {
 variable "ec2_profile_name" {
 }
 variable "with_userdata" {
- type = bool
+  type = bool
 }
 
 variable "ami_id" {
@@ -31,7 +31,7 @@ variable "key_name" {
 
 }
 variable "prefix" {
-  type = string
+  type        = string
   description = "Stack prefix"
 }
 variable "security_groups_list" {
@@ -65,3 +65,6 @@ variable "vpc_id" {
 variable "member_node_id" {
 }
 
+variable "s3_uri_bc_code" {
+  description = "S# URI to blockchain code (compressed gz)"
+}

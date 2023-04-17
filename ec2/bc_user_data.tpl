@@ -18,19 +18,19 @@ Content-Transfer-Encoding: 7bit
 Content-Disposition: attachment; filename="userdata.txt"
 
 #!/usr/bin/env bash
-pip install --upgrade awscli
+exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
+yum update -y
+yum install jq libtool libtool-ltdl-devel wget python3-pip git -y
+curl -L https://github.com/docker/compose/releases/download/1.20.0/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose
+chmod a+x /usr/local/bin/docker-compose
 VpcEndpointServiceName=$(aws managedblockchain get-network --region ${REGION} --network-id ${NETWORKID}  --query 'Network.VpcEndpointServiceName' --output text)
 OrderingServiceEndpoint=$(aws managedblockchain get-network --region ${REGION}  --network-id ${NETWORKID}  --query 'Network.FrameworkAttributes.Fabric.OrderingServiceEndpoint' --output text)
 CaEndpoint=$(aws managedblockchain get-member --region ${REGION}  --network-id ${NETWORKID}  --member-id ${MEMBERID}  --query 'Member.FrameworkAttributes.Fabric.CaEndpoint' --output text)
 nodeID=${MEMEBERNODEID}
 peerEndpoint=$(aws managedblockchain get-node --region ${REGION}  --network-id ${NETWORKID}  --member-id ${MEMBERID}  --node-id $nodeID --query 'Node.FrameworkAttributes.Fabric.PeerEndpoint' --output text)
 peerEventEndpoint=$(aws managedblockchain get-node --region ${REGION}  --network-id ${NETWORKID}  --member-id ${MEMBERID}  --node-id $nodeID --query 'Node.FrameworkAttributes.Fabric.PeerEventEndpoint' --output text)
-
-sudo -u ec2-user -i <<EOF1
-PATH=$PATH:/usr/local/bin
-source /home/ec2-user/.bash_profile
 # Exports to be exported before executing any Fabric 'peer' commands via the CLI
-cat << EOF2 > ~/peer-exports.sh
+cat << EXPORT_ENVS > /tmp/peer-exports.sh
 export NETWORKNAME=${NETWORKNAME}
 export MEMBERNAME=${MEMBERNAME}
 export NETWORKVERSION=${NETWORKVERSION}
@@ -55,101 +55,153 @@ export CAFILE=/opt/home/managedblockchain-tls-chain.pem
 export CHAINCODENAME=${CHANNELCODENAME}
 export CHAINCODEVERSION=v0
 export CHAINCODEDIR=github.com/chaincode_example02/go
-EOF2
-aws s3 cp s3://us-east-1.managedblockchain/etc/managedblockchain-tls-chain.pem  /home/ec2-user/managedblockchain-tls-chain.pem
-source /home/ec2-user/peer-exports.sh
-fabric-ca-client enroll -u https://${ADMINUSER}:${ADMINPWD}@\$CASERVICEENDPOINT --tls.certfiles /home/ec2-user/managedblockchain-tls-chain.pem -M /home/ec2-user/admin-msp
-echo https://${ADMINUSER}:${ADMINPWD}@\$CASERVICEENDPOINT  >> /tmp/api_url.txt
-mkdir -p /home/ec2-user/admin-msp/admincerts
-cp /home/ec2-user/admin-msp/signcerts/* /home/ec2-user/admin-msp/admincerts/
-EOF1
+export PATH=/usr/local/bin:/home/ec2-user/go/src/github.com/hyperledger/fabric-ca/bin:$PATH
+EXPORT_ENVS
+
+source /tmp/peer-exports.sh
+cat << EOFDOCKER > /tmp/docker-compose-cli.yaml
+version: '2'
+services:
+  cli:
+    container_name: cli
+    image: hyperledger/fabric-tools:2.2.3
+    tty: true
+    environment:
+      - GOPATH=/opt/gopath
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - FABRIC_LOGGING_SPEC=info # Set logging level to debug for more verbose logging
+      - CORE_PEER_ID=cli
+      - CORE_CHAINCODE_KEEPALIVE=10
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_TLS_ROOTCERT_FILE=/opt/home/managedblockchain-tls-chain.pem
+      - CORE_PEER_LOCALMSPID=${MEMBERID}
+      - CORE_PEER_MSPCONFIGPATH=/opt/home/admin-msp
+      - CORE_PEER_ADDRESS=$PEERSERVICEENDPOINT
+    working_dir: /opt/home
+    command: /bin/bash
+    volumes:
+        - /var/run/:/host/var/run/
+        - /home/ec2-user/fabric-samples/chaincode:/opt/gopath/src/github.com/
+        - /home/ec2-user/:/opt/home
+
+EOFDOCKER
+
+
 
 sudo -u ec2-user -i <<EOF1
-cat << EOF2 > ~/configtx.yaml
+cd /home/ec2-user/
+cp /tmp/peer-exports.sh /home/ec2-user/peer-exports.sh
+pip install --upgrade awscli
+rm -rf fabric-samples
+git clone --branch v2.2.3 https://github.com/hyperledger/fabric-samples.git
+aws s3 cp s3://us-east-1.managedblockchain/etc/managedblockchain-tls-chain.pem  /home/ec2-user/managedblockchain-tls-chain.pem
+source /home/ec2-user/peer-exports.sh
+curl https://\$CASERVICEENDPOINT/cainfo -k
+mkdir -p /home/ec2-user/go/src/github.com/hyperledger/fabric-ca
+cd /home/ec2-user/go/src/github.com/hyperledger/fabric-ca
+wget https://github.com/hyperledger/fabric-ca/releases/download/v1.4.7/hyperledger-fabric-ca-linux-amd64-1.4.7.tar.gz
+tar -xzf hyperledger-fabric-ca-linux-amd64-1.4.7.tar.gz
+cd /home/ec2-user/
+cp /tmp/docker-compose-cli.yaml /home/ec2-user/docker-compose-cli.yaml
+docker-compose -f docker-compose-cli.yaml up -d
+fabric-ca-client enroll -u "https://${ADMINUSER}:${ADMINPWD}@\$CASERVICEENDPOINT" --tls.certfiles /home/ec2-user/managedblockchain-tls-chain.pem -M /home/ec2-user/admin-msp
+cp -r /home/ec2-user/admin-msp/signcerts admin-msp/admincerts
+cat << EOFCONFIG > /home/ec2-user/configtx.yaml
 Organizations:
     - &Org1
         Name: ${MEMBERID}
-
-        # ID to load the MSP definition as
         ID: ${MEMBERID}
-
+        SkipAsForeign: false
+        Policies: &Org1Policies
+            Readers:
+                Type: Signature
+                Rule: "OR('Org1.member')"
+            Writers:
+                Type: Signature
+                Rule: "OR('Org1.member')"
+            Admins:
+                Type: Signature
+                Rule: "OR('Org1.admin')"
         MSPDir: /opt/home/admin-msp
-
         AnchorPeers:
-            # AnchorPeers defines the location of peers which can be used
-            # for cross org gossip communication.  Note, this value is only
-            # encoded in the genesis block in the Application section context
-            - Host:
-              Port:
-
-################################################################################
-#
-#   SECTION: Application
-#
-#   - This section defines the values to encode into a config transaction or
-#   genesis block for application related parameters
-#
-################################################################################
+            - Host: 127.0.0.1
+              Port: 7051
+Capabilities:
+    Channel: &ChannelCapabilities
+        V2_0: true
+    Orderer: &OrdererCapabilities
+        V2_0: true
+    Application: &ApplicationCapabilities
+        V2_0: true
+Channel: &ChannelDefaults
+    Policies:
+        Readers:
+            Type: ImplicitMeta
+            Rule: "ANY Readers"
+        Writers:
+            Type: ImplicitMeta
+            Rule: "ANY Writers"
+        Admins:
+            Type: ImplicitMeta
+            Rule: "MAJORITY Admins"
+    Capabilities:
+        <<: *ChannelCapabilities
 Application: &ApplicationDefaults
-
-    # Organizations is the list of orgs which are defined as participants on
-    # the application side of the network
     Organizations:
+    Policies: &ApplicationDefaultPolicies
+        LifecycleEndorsement:
+            Type: ImplicitMeta
+            Rule: "ANY Readers"
+        Endorsement:
+            Type: ImplicitMeta
+            Rule: "ANY Readers"
+        Readers:
+            Type: ImplicitMeta
+            Rule: "ANY Readers"
+        Writers:
+            Type: ImplicitMeta
+            Rule: "ANY Writers"
+        Admins:
+            Type: ImplicitMeta
+            Rule: "MAJORITY Admins"
 
-################################################################################
-#
-#   Profile
-#
-#   - Different configuration profiles may be encoded here to be specified
-#   as parameters to the configtxgen tool
-#
-################################################################################
+    Capabilities:
+        <<: *ApplicationCapabilities
 Profiles:
-
     OneOrgChannel:
+        <<: *ChannelDefaults
         Consortium: AWSSystemConsortium
         Application:
             <<: *ApplicationDefaults
             Organizations:
-                - *Org1
+                - <<: *Org1
 
-EOF2
+EOFCONFIG
+docker exec cli configtxgen -outputCreateChannelTx /opt/home/${CHANNELID}.pb -profile OneOrgChannel -channelID ${CHANNELID} --configPath /opt/home/
+aws s3 cp ${S3URIBCCODE} .
 EOF1
-
-
-
-
-
+echo "Allowing blockchaine to be established"
+sleep 300
 source /home/ec2-user/peer-exports.sh
+echo "Now Creating the channel"
+docker exec cli peer channel create -c ${CHANNELID} -f /opt/home/${CHANNELID}.pb -o $ORDERER --cafile /opt/home/managedblockchain-tls-chain.pem --tls
+docker exec cli peer channel join -b ${CHANNELID}.block -o $ORDERER --cafile /opt/home/managedblockchain-tls-chain.pem --tls
 
-# Update the configtx channel configuration
-docker exec cli configtxgen -outputCreateChannelTx /opt/home/$CHANNEL.pb -profile OneOrgChannel -channelID $CHANNEL --configPath /opt/home/
-sleep 30
-# Create a Fabric channel
-docker exec -e "CORE_PEER_TLS_ENABLED=true" -e "CORE_PEER_TLS_ROOTCERT_FILE=/opt/home/managedblockchain-tls-chain.pem" \
-    -e "CORE_PEER_ADDRESS=$PEER" -e "CORE_PEER_LOCALMSPID=$MSP" -e "CORE_PEER_MSPCONFIGPATH=$MSP_PATH" \
-    cli peer channel create -c $CHANNEL -f /opt/home/$CHANNEL.pb -o $ORDERER --cafile $CAFILE --tls --timeout 900s >> /tmp/this_what_happened.txt
+# INSTALL Chain Code
+echo "Installing chain-code"
+sleep 100
+docker exec cli peer lifecycle chaincode install final.tar.gz
+PACKAGE_QUERY=$(docker exec cli peer lifecycle chaincode queryinstalled)
+export CC_PACKAGE_ID=$(echo $PACKAGE_QUERY | grep -o '\w\+:[a-f0-9]\{64\}')
+echo "PACKAGE_ID: $CC_PACKAGE_ID"
+docker exec cli peer lifecycle chaincode approveformyorg --orderer $ORDERER --tls --cafile /opt/home/managedblockchain-tls-chain.pem --channelID $CHANNEL --name $CHAINCODENAME --version v0 --sequence 1 --package-id $CC_PACKAGE_ID
+docker exec cli peer lifecycle chaincode checkcommitreadiness --orderer $ORDERER --tls --cafile /opt/home/managedblockchain-tls-chain.pem --channelID $CHANNEL --name $CHAINCODENAME --version v0 --sequence 1
+docker exec cli peer lifecycle chaincode commit --orderer $ORDERER --tls --cafile /opt/home/managedblockchain-tls-chain.pem --channelID $CHANNEL --name $CHAINCODENAME --version v0 --sequence 1
+docker exec cli peer lifecycle chaincode querycommitted --channelID $CHANNEL
+docker exec cli peer chaincode invoke --tls --cafile /opt/home/managedblockchain-tls-chain.pem --channelID $CHANNEL --name $CHAINCODENAME -c '{"Args":["createUser","{\"username\": \"edge\", \"email\": \"edge@def.com\", \"registeredDate\": \"2018-10-22T11:52:20.182Z\"}"]}'
+
+# Test Query
+#docker exec cli peer chaincode invoke --tls --cafile /opt/home/managedblockchain-tls-chain.pem --channelID $CHANNEL --name $CHAINCODENAME -c '{"Args":["queryUser","{\"username\": \"edge\"}"]}'
 
 
-# Get the block from the channel itself
-docker exec -e "CORE_PEER_TLS_ENABLED=true" -e "CORE_PEER_TLS_ROOTCERT_FILE=/opt/home/managedblockchain-tls-chain.pem"  \
-    -e "CORE_PEER_ADDRESS=$PEER"  -e "CORE_PEER_LOCALMSPID=$MSP" -e "CORE_PEER_MSPCONFIGPATH=$MSP_PATH" \
-    cli peer channel fetch oldest /opt/home/fabric-samples/chaincode/hyperledger/fabric/peer/$CHANNELID.block \
-    -c $CHANNEL -o $ORDERER --cafile /opt/home/managedblockchain-tls-chain.pem --tls
-
-# Join your peer node to the channel
-docker exec -e "CORE_PEER_TLS_ENABLED=true" -e "CORE_PEER_TLS_ROOTCERT_FILE=/opt/home/managedblockchain-tls-chain.pem" \
-    -e "CORE_PEER_ADDRESS=$PEER" -e "CORE_PEER_LOCALMSPID=$MSP" -e "CORE_PEER_MSPCONFIGPATH=$MSP_PATH" \
-    cli peer channel join -b $CHANNEL.block  -o $ORDERER --cafile $CAFILE --tls
-
-# Install chaincode on your peer node
-docker exec -e "CORE_PEER_TLS_ENABLED=true" -e "CORE_PEER_TLS_ROOTCERT_FILE=/opt/home/managedblockchain-tls-chain.pem" \
-    -e "CORE_PEER_ADDRESS=$PEER" -e "CORE_PEER_LOCALMSPID=$MSP" -e "CORE_PEER_MSPCONFIGPATH=$MSP_PATH" \
-    cli peer chaincode install -n $CHAINCODENAME -v $CHAINCODEVERSION -p $CHAINCODEDIR
-
-# Instantiate the chaincode on the channel
-docker exec -e "CORE_PEER_TLS_ENABLED=true" -e "CORE_PEER_TLS_ROOTCERT_FILE=/opt/home/managedblockchain-tls-chain.pem" \
-    -e "CORE_PEER_ADDRESS=$PEER" -e "CORE_PEER_LOCALMSPID=$MSP" -e "CORE_PEER_MSPCONFIGPATH=$MSP_PATH" \
-    cli peer chaincode instantiate -o $ORDERER -C $CHANNEL -n $CHAINCODENAME -v $CHAINCODEVERSION \
-    -c '{"Args":["init","a","100","b","200"]}' --cafile $CAFILE --tls
 
