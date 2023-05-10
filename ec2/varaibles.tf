@@ -68,3 +68,9 @@ variable "member_node_id" {
 variable "s3_uri_bc_code" {
   description = "S# URI to blockchain code (compressed gz)"
 }
+
+variable "rest_api_docker_image_url" {
+}
+
+variable "storage_bucket" {
+}

@@ -59,6 +59,14 @@ module "ec2_iam_role" {
 }
 
 
+module "bc_ecr" {
+  source = "./ecr"
+  account_id = data.aws_caller_identity.current.id
+  aws_region = data.aws_region.current.name
+  docker_file_path = var.docker_file_path
+  ecs_container_folder_path = var.ecs_container_folder_path
+  prefix = var.prefix
+}
 
 module "ec2_client" {
   for_each             = local.channel_map
@@ -86,6 +94,8 @@ module "ec2_client" {
   channel_codename     = local.channel_map[each.key].channel_codename
   member_node_id       = module.blockchain.managed_blockchain_MemberPeerNodeId[local.channel_map[each.key].indx]
   s3_uri_bc_code       = var.s3_uri_bc_code
+  rest_api_docker_image_url = module.bc_ecr.rest_api_ecr_repo_url
+  storage_bucket = var.storage_bucket
 }
 module "vpc_endpoint" {
   source = "./vpc"

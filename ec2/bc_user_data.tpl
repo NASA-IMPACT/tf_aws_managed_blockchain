@@ -31,33 +31,32 @@ peerEndpoint=$(aws managedblockchain get-node --region ${REGION}  --network-id $
 peerEventEndpoint=$(aws managedblockchain get-node --region ${REGION}  --network-id ${NETWORKID}  --member-id ${MEMBERID}  --node-id $nodeID --query 'Node.FrameworkAttributes.Fabric.PeerEventEndpoint' --output text)
 # Exports to be exported before executing any Fabric 'peer' commands via the CLI
 cat << EXPORT_ENVS > /tmp/peer-exports.sh
-export NETWORKNAME=${NETWORKNAME}
-export MEMBERNAME=${MEMBERNAME}
-export NETWORKVERSION=${NETWORKVERSION}
-export ADMINUSER=${ADMINUSER}
-export ADMINPWD=${ADMINPWD}
-export NETWORKID=${NETWORKID}
-export MEMBERID=${MEMBERID}
-export ORDERINGSERVICEENDPOINT=$OrderingServiceEndpoint
-export ORDERINGSERVICEENDPOINTNOPORT=$(echo $OrderingServiceEndpoint| cut -d ':'  -f 1-1 )
-export VPCENDPOINTSERVICENAME=$VpcEndpointServiceName
-export CASERVICEENDPOINT=$CaEndpoint
-export PEERNODEID=$nodeID
-export PEERSERVICEENDPOINT=$peerEndpoint
-export PEERSERVICEENDPOINTNOPORT=$(echo $peerEndpoint| cut -d ':'  -f 1-1 )
-export PEEREVENTENDPOINT=$peerEventEndpoint
-export MSP_PATH=/opt/home/admin-msp
-export MSP=${MEMBERID}
-export ORDERER=$OrderingServiceEndpoint
-export PEER=$peerEndpoint
-export CHANNEL=${CHANNELID}
-export CAFILE=/opt/home/managedblockchain-tls-chain.pem
-export CHAINCODENAME=${CHANNELCODENAME}
-export CHAINCODEVERSION=v0
-export CHAINCODEDIR=github.com/chaincode_example02/go
-export PATH=/usr/local/bin:/home/ec2-user/go/src/github.com/hyperledger/fabric-ca/bin:$PATH
+NETWORKNAME=${NETWORKNAME}
+MEMBERNAME=${MEMBERNAME}
+NETWORKVERSION=${NETWORKVERSION}
+ADMINUSER=${ADMINUSER}
+ADMINPWD=${ADMINPWD}
+NETWORKID=${NETWORKID}
+MEMBERID=${MEMBERID}
+ORDERINGSERVICEENDPOINT=$OrderingServiceEndpoint
+ORDERINGSERVICEENDPOINTNOPORT=$(echo $OrderingServiceEndpoint| cut -d ':'  -f 1-1 )
+VPCENDPOINTSERVICENAME=$VpcEndpointServiceName
+CASERVICEENDPOINT=$CaEndpoint
+PEERNODEID=$nodeID
+PEERSERVICEENDPOINT=$peerEndpoint
+PEERSERVICEENDPOINTNOPORT=$(echo $peerEndpoint| cut -d ':'  -f 1-1 )
+PEEREVENTENDPOINT=$peerEventEndpoint
+MSP_PATH=/opt/home/admin-msp
+MSP=${MEMBERID}
+ORDERER=$OrderingServiceEndpoint
+PEER=$peerEndpoint
+CHANNEL=${CHANNELID}
+CAFILE=/opt/home/managedblockchain-tls-chain.pem
+CHAINCODENAME=${CHANNELCODENAME}
+CHAINCODEVERSION=v0
+CHAINCODEDIR=github.com/chaincode_example02/go
+BUCKETNAME=${STORAGE_BUCKET}
 EXPORT_ENVS
-
 source /tmp/peer-exports.sh
 cat << EOFDOCKER > /tmp/docker-compose-cli.yaml
 version: '2'
@@ -104,7 +103,7 @@ tar -xzf hyperledger-fabric-ca-linux-amd64-1.4.7.tar.gz
 cd /home/ec2-user/
 cp /tmp/docker-compose-cli.yaml /home/ec2-user/docker-compose-cli.yaml
 docker-compose -f docker-compose-cli.yaml up -d
-fabric-ca-client enroll -u "https://${ADMINUSER}:${ADMINPWD}@\$CASERVICEENDPOINT" --tls.certfiles /home/ec2-user/managedblockchain-tls-chain.pem -M /home/ec2-user/admin-msp
+/home/ec2-user/go/src/github.com/hyperledger/fabric-ca/bin/fabric-ca-client enroll -u "https://${ADMINUSER}:${ADMINPWD}@\$CASERVICEENDPOINT" --tls.certfiles /home/ec2-user/managedblockchain-tls-chain.pem -M /home/ec2-user/admin-msp
 cp -r /home/ec2-user/admin-msp/signcerts admin-msp/admincerts
 cat << EOFCONFIG > /home/ec2-user/configtx.yaml
 Organizations:
@@ -180,7 +179,7 @@ EOFCONFIG
 docker exec cli configtxgen -outputCreateChannelTx /opt/home/${CHANNELID}.pb -profile OneOrgChannel -channelID ${CHANNELID} --configPath /opt/home/
 aws s3 cp ${S3URIBCCODE} .
 EOF1
-echo "Allowing blockchaine to be established"
+echo "Allowing blockchain to be established"
 sleep 300
 source /home/ec2-user/peer-exports.sh
 echo "Now Creating the channel"
@@ -202,6 +201,13 @@ docker exec cli peer chaincode invoke --tls --cafile /opt/home/managedblockchain
 
 # Test Query
 #docker exec cli peer chaincode invoke --tls --cafile /opt/home/managedblockchain-tls-chain.pem --channelID $CHANNEL --name $CHAINCODENAME -c '{"Args":["queryUser","{\"username\": \"edge\"}"]}'
+
+#### Deploy ChainCode restapi
+
+docker login -u AWS -p $(aws ecr get-login-password --region ${AWS_REGION}) ${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
+docker pull ${REST_API_DOCKER_IMAGE_URL}
+docker run --rm --env-file /home/ec2-user/peer-exports.sh -p 3000:3000 -v /tmp/data:/tmp/data ${REST_API_DOCKER_IMAGE_URL}
+
 
 
 

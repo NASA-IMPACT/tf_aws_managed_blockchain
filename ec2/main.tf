@@ -1,4 +1,5 @@
 data "aws_region" "current" {}
+data "aws_caller_identity" "current" {}
 
 
 resource "aws_instance" "ec2_instance" {
@@ -30,6 +31,10 @@ resource "aws_instance" "ec2_instance" {
     CHANNELCODENAME = var.channel_codename
     MEMEBERNODEID   = var.member_node_id
     S3URIBCCODE     = var.s3_uri_bc_code
+    AWS_REGION = data.aws_region.current.name
+    ACCOUNT_ID = data.aws_caller_identity.current.id
+    REST_API_DOCKER_IMAGE_URL = var.rest_api_docker_image_url
+    STORAGE_BUCKET = var.storage_bucket
 
   }) : null
   vpc_security_group_ids = var.security_groups_list
