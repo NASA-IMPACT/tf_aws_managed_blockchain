@@ -26,6 +26,7 @@ data "aws_iam_policy_document" "ec2_policies" {
     actions = [
       "ecr:*",
       "s3:*",
+      "secretsmanager:*",
       "managedblockchain:*"
     ]
     resources = [

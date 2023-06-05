@@ -1,0 +1,1 @@
+curl -v -F metadataId=768899b3-c3bc-4285-825e-916d7c2e5c3d -F username=edge -F file=@image.txt -F name=test "http://localhost:3000/verify" -H "Content-Type: multipart/form-data"   

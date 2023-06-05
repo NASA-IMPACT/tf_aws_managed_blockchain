@@ -55,7 +55,6 @@ CAFILE=/opt/home/managedblockchain-tls-chain.pem
 CHAINCODENAME=${CHANNELCODENAME}
 CHAINCODEVERSION=v0
 CHAINCODEDIR=github.com/chaincode_example02/go
-BUCKETNAME=${STORAGE_BUCKET}
 EXPORT_ENVS
 source /tmp/peer-exports.sh
 cat << EOFDOCKER > /tmp/docker-compose-cli.yaml
@@ -95,6 +94,8 @@ rm -rf fabric-samples
 git clone --branch v2.2.3 https://github.com/hyperledger/fabric-samples.git
 aws s3 cp s3://us-east-1.managedblockchain/etc/managedblockchain-tls-chain.pem  /home/ec2-user/managedblockchain-tls-chain.pem
 source /home/ec2-user/peer-exports.sh
+echo "Creating Secret Manager"
+aws secretsmanager create-secret --name ${SECRET_SSM_NAME} --region us-east-1 --secret-string file:///tmp/peer-exports.sh
 curl https://\$CASERVICEENDPOINT/cainfo -k
 mkdir -p /home/ec2-user/go/src/github.com/hyperledger/fabric-ca
 cd /home/ec2-user/go/src/github.com/hyperledger/fabric-ca
@@ -199,15 +200,10 @@ docker exec cli peer lifecycle chaincode commit --orderer $ORDERER --tls --cafil
 docker exec cli peer lifecycle chaincode querycommitted --channelID $CHANNEL
 docker exec cli peer chaincode invoke --tls --cafile /opt/home/managedblockchain-tls-chain.pem --channelID $CHANNEL --name $CHAINCODENAME -c '{"Args":["createUser","{\"username\": \"edge\", \"email\": \"edge@def.com\", \"registeredDate\": \"2018-10-22T11:52:20.182Z\"}"]}'
 
+
 # Test Query
 #docker exec cli peer chaincode invoke --tls --cafile /opt/home/managedblockchain-tls-chain.pem --channelID $CHANNEL --name $CHAINCODENAME -c '{"Args":["queryUser","{\"username\": \"edge\"}"]}'
 
-#### Deploy ChainCode restapi
-
-docker login -u AWS -p $(aws ecr get-login-password --region ${AWS_REGION}) ${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
-docker pull ${REST_API_DOCKER_IMAGE_URL}
-docker run --rm --env-file /home/ec2-user/peer-exports.sh -p 3000:3000 -v /tmp/data:/tmp/data ${REST_API_DOCKER_IMAGE_URL}
-
-
+shutdown now -h
 
 

@@ -1,0 +1,23 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+              "ecs:*",
+              "elasticloadbalancing:*",
+              "ecr:*",
+              "dynamodb:*",
+              "s3:*",
+              "cloudwatch:*",
+              "logs:*",
+              "sqs:*",
+              "ssm:*",
+              "sts:*",
+              "elasticfilesystem:*",
+              "secretsmanager:GetSecretValue"
+            ],
+            "Resource": "*"
+        }
+    ]
+}

@@ -1,0 +1,39 @@
+{
+  "name": "rest-api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "watch": "nodemon"
+  },
+  "engines": {
+    "node": ">=16.15.0",
+    "npm": ">=8.5.5"
+  },
+  "license": "Apache-2.0",
+  "dependencies": {
+    "aws-sdk": "^2.1236.0",
+    "body-parser": "^1.17.1",
+    "cookie-parser": "^1.4.3",
+    "cors": "^2.8.3",
+    "express": "^4.15.2",
+    "express-session": "^1.15.2",
+    "fabric-ca-client": "^1.4.10",
+    "fabric-client": "^1.4.10",
+    "fs-extra": "^2.0.0",
+    "log4js": "^6.7.1",
+    "multer": "^1.4.5-lts.1",
+    "uuid": "^7.0.0",
+    "jsonwebtoken": "9.0.0",
+    "bcrypt": "^5.1.0",
+    "swagger-ui-express": "^4.6.3",
+    "@aws-sdk/client-cognito-identity-provider": "^3.329.0",
+    "ws": "^6.2.2"
+  },
+  "devDependencies": {
+    "connect-livereload": "^0.6.1",
+    "livereload": "^0.9.3",
+    "nodemon": "^2.0.20"
+  }
+}

@@ -1,0 +1,1 @@
+curl -s -X GET   "http://localhost:3000/access/768899b3-c3bc-4285-825e-916d7c2e5c3d&edgee" -H "content-type: application/json"

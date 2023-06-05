@@ -4,6 +4,7 @@ variable "prefix" {
 variable "network_name" {
   type = string
 
+
 }
 variable "network_description" {
   default = "Network for tracking files and sharing them between organisations"
@@ -30,18 +31,19 @@ variable "member_name" {
 }
 variable "member_description" {
   type    = string
-  default = "This is the first member"
+  default = "This is a member"
 }
 variable "member_admin_username" {
   description = "The user name of your member's admin user."
+
 }
 variable "member_admin_password" {
   description = "The password of your member's admin user."
+
 }
 
 variable "peernode_instance_type" {
   description = "The type of compute instance to use for your peer nodes."
-  default     = "bc.t3.small"
 }
 
 variable "blockchain_protocol_framework" {
@@ -53,15 +55,11 @@ variable "blockchain_protocol_framework_version" {
   default     = "2.2"
 }
 
-variable "vpc_id" {
-  type = string
-}
 variable "ami_id" {
   description = "AMI ID for the EC2 cli"
+
 }
-variable "subnet_id" {
-  type = string
-}
+
 
 
 
@@ -87,17 +85,96 @@ variable "ec2_cli_configuration" {
     channel_codename = string
     instance_type    = string
   }))
+
 }
 variable "s3_uri_bc_code" {
   description = "S3 URI of the chain code"
+   default = "s3://bc-chaincode-package/final.tar.gz" # Delete
 }
+#
 
-variable "docker_file_path" {
-
-}
 variable "ecs_container_folder_path" {
-
 }
-
+#
 variable "storage_bucket" {
+
 }
+
+
+variable "vpc_cidr" {
+  default = "10.0.0.0/16"
+}
+
+
+
+variable "public_subnet_1_cidr" {
+  description = "Public Subnet CIDR 1"
+  default = "10.0.1.0/24"
+}
+
+variable "public_subnet_2_cidr" {
+  description = "Public Subnet CIDR 2"
+  default = "10.0.2.0/24"
+}
+
+variable "public_subnet_3_cidr" {
+  description = "Public Subnet CIDR 3"
+  default = "10.0.3.0/24"
+}
+
+
+variable "private_subnet_1_cidr" {
+  description = "private Subnet CIDR 1"
+  default = "10.0.4.0/24"
+}
+
+
+variable "private_subnet_2_cidr" {
+  description = "private Subnet CIDR 2"
+  default = "10.0.5.0/24"
+}
+
+variable "private_subnet_3_cidr" {
+  description = "private Subnet CIDR 3"
+  default = "10.0.6.0/24"
+}
+
+variable "ecs_domain_name" {
+
+}
+
+variable "internet_cider_blocks" {
+  default = "0.0.0.0/0"
+}
+
+variable "ecs-cluster-name" {
+}
+
+variable "docker_container_port" {
+  default = 3000
+}
+
+
+variable "efs_path" {
+  default = "/mnt/efs_mount"
+}
+
+variable "tasks_count" {
+  default = "1"
+}
+
+variable "task_memory" {
+  default = 1024
+}
+
+variable "ecs_environment" {
+  type = list(object({name = string, value = string}))
+  default = [{
+    name= "EXAMPLE",
+    value = "foo"
+  }]
+}
+variable "key_name" {
+  default = null
+}
+

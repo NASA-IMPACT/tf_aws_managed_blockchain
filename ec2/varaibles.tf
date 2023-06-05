@@ -20,16 +20,12 @@ variable "description" {
 }
 variable "ec2_profile_name" {
 }
-variable "with_userdata" {
-  type = bool
-}
+
 
 variable "ami_id" {
 
 }
-variable "key_name" {
 
-}
 variable "prefix" {
   type        = string
   description = "Stack prefix"
@@ -66,11 +62,16 @@ variable "member_node_id" {
 }
 
 variable "s3_uri_bc_code" {
-  description = "S# URI to blockchain code (compressed gz)"
+  description = "S3 URI to blockchain code (compressed gz)"
 }
 
-variable "rest_api_docker_image_url" {
-}
+#variable "rest_api_docker_image_url" {
+#}
 
-variable "storage_bucket" {
+
+variable "secret_ssm_name" {
+
+}
+variable "key_name" {
+
 }

@@ -14,16 +14,18 @@ output "bc_member_admin_username" {
 #  value = module.ec2_node.ec2_ip
 #}
 
-output "bc_ec2_ip" {
+#output "bc_ec2_info" {
+#
+#  value = [
+#    for ec2 in module.ec2_client : "IP:${ec2.ec2_ip} Key_Name: ${ec2.ec2_instance_key_name} Channel: ${ec2.channel_id} EIP: ${ec2.ec2_eip}"
+#  ]
+#
+#}
 
-  value = [
-    for ec2 in module.ec2_client : "IP:${ec2.ec2_ip} Key_Name: ${ec2.ec2_instance_key_name} Channel: ${ec2.channel_id}"
-  ]
 
-}
-output "ec2_profile_arn" {
-  value = module.ec2_iam_role.profile_arn
-}
+#output "ec2_profile_arn" {
+#  value = module.ec2_iam_role.profile_arn
+#}
 
 output "bc_sevice_endpoint" {
   value = module.blockchain.managed_blockchain_service_endpoint

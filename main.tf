@@ -11,6 +11,7 @@ data "aws_region" "current" {}
 locals {
   account_id = data.aws_caller_identity.current.id
   aws_region = data.aws_region.current.name
+  aws_secret_manager_name = "${var.prefix}-ssm-secrets"
   ec2_cli_count = flatten([
     for indx, bc_channel in var.ec2_cli_configuration : {
       indx             = indx
@@ -47,10 +48,21 @@ module "blockchain" {
   peernode_instance_type                = var.peernode_instance_type
   bc_peer_node_count                    = var.bc_peer_node_count
 }
-
+module "network" {
+  source = "./network"
+  prefix = var.prefix
+  private_subnet_1_cidr = var.private_subnet_1_cidr
+  private_subnet_2_cidr = var.private_subnet_2_cidr
+  private_subnet_3_cidr = var.private_subnet_3_cidr
+  public_subnet_1_cidr = var.public_subnet_1_cidr
+  public_subnet_2_cidr = var.public_subnet_2_cidr
+  public_subnet_3_cidr = var.public_subnet_3_cidr
+  vpc_cidr = var.vpc_cidr
+  aws_region = local.aws_region
+}
 module "security_groups" {
   source = "./sg"
-  vpc_id = var.vpc_id
+  vpc_id = module.network.vpv_id
   prefix = var.prefix
 }
 module "ec2_iam_role" {
@@ -59,24 +71,14 @@ module "ec2_iam_role" {
 }
 
 
-module "bc_ecr" {
-  source = "./ecr"
-  account_id = data.aws_caller_identity.current.id
-  aws_region = data.aws_region.current.name
-  docker_file_path = var.docker_file_path
-  ecs_container_folder_path = var.ecs_container_folder_path
-  prefix = var.prefix
-}
-
 module "ec2_client" {
   for_each             = local.channel_map
   source               = "./ec2"
   ami_id               = var.ami_id
   prefix               = var.prefix
   security_groups_list = [module.security_groups.sg_id]
-  subnet_id            = var.subnet_id
+  subnet_id            = module.network.public_subnet_1_id
   tag_name             = "${var.prefix} EC2 client"
-  with_userdata        = true
   ec2_profile_name     = module.ec2_iam_role.profile_name
   description          = "With automated userdata and endpoint"
   user_data_path       = "${path.module}/ec2/bc_user_data.tpl"
@@ -87,23 +89,55 @@ module "ec2_client" {
   networkid            = module.blockchain.managed_blockchain_NetworkId
   networkname          = module.blockchain.managed_blockchain_NetworkName
   networkversion       = module.blockchain.managed_blockchain_FrameworkVersion
-  vpc_id               = var.vpc_id
+  vpc_id               = module.network.vpv_id
   instance_type        = local.channel_map[each.key].instance_type
   key_name             = local.channel_map[each.key].key_pair_name
   channel_id           = local.channel_map[each.key].channel_id
   channel_codename     = local.channel_map[each.key].channel_codename
-  member_node_id       = module.blockchain.managed_blockchain_MemberPeerNodeId[local.channel_map[each.key].indx]
+  member_node_id       = module.blockchain.managed_blockchain_MemberPeerNodeId[0]
   s3_uri_bc_code       = var.s3_uri_bc_code
-  rest_api_docker_image_url = module.bc_ecr.rest_api_ecr_repo_url
-  storage_bucket = var.storage_bucket
+  secret_ssm_name = local.aws_secret_manager_name
 }
-module "vpc_endpoint" {
-  source = "./vpc"
 
-  prefix               = var.prefix
-  security_groups_list = [module.security_groups.sg_id]
-  service_name         = module.blockchain.managed_blockchain_service_endpoint
-  subnet_id            = var.subnet_id
-  vpc_id               = var.vpc_id
+
+
+module "platform" {
+  source                = "./platform"
+  depends_on = [module.ec2_client]
+  ecs-cluster-name      = var.ecs-cluster-name
+  ecs_domain_name       = var.ecs_domain_name
+  internet_cider_blocks = var.internet_cider_blocks
+  public_subnet_ids     = split(",", "${module.network.public_subnet_1_id},${module.network.public_subnet_2_id},${module.network.public_subnet_3_id}")
+  vpc_id                = module.network.vpv_id
+  docker_container_port = var.docker_container_port
+  efs_path              = var.efs_path
+  region                = local.aws_region
+  task_memory           = var.task_memory
+  tasks_count           = var.tasks_count
+  vpc_cidr              = var.vpc_cidr
+  account_id = data.aws_caller_identity.current.account_id
+  private_subnet_ids    = split(",", "${module.network.private_subnet_1_id},${module.network.private_subnet_2_id},${module.network.private_subnet_3_id}")
+  ecs_environment       = concat([
+    { name = "SECRET_SSM_NAME", value = local.aws_secret_manager_name },
+    { name = "AWS_DEFAULT_REGION", value = local.aws_region},
+    { name = "TRIGGER_BUILD", value = sha1(join("", [for f in fileset(var.ecs_container_folder_path, "*") : filesha1("${var.ecs_container_folder_path}/${f}")])) }
+    ], var.ecs_environment)
+  prefix = var.prefix
+  ecs_container_folder_path = var.ecs_container_folder_path
 }
+
+
+resource "aws_vpc_endpoint" "blockchain_vpc_endpoint" {
+  vpc_id       = module.network.vpv_id
+  service_name = module.blockchain.managed_blockchain_service_endpoint
+  vpc_endpoint_type = "Interface"
+  private_dns_enabled = true
+  subnet_ids = [module.network.private_subnet_1_id, module.network.private_subnet_2_id]
+  security_group_ids = [module.security_groups.sg_id, module.platform.task_security_groups_id]
+
+  tags = {
+    Environment = "${var.prefix}-vpc_endpoint"
+  }
+}
+
 
