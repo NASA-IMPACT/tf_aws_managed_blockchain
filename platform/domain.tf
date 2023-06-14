@@ -17,6 +17,7 @@ resource "aws_route53_record" "ecs_cert_vald_rec" {
       name    = dvo.resource_record_name
       record  = dvo.resource_record_value
       type    = dvo.resource_record_type
+      multivalue_answer_routing_policy = false
       zone_id = data.aws_route53_zone.ecs_domain.zone_id
     }
   }

@@ -204,6 +204,6 @@ docker exec cli peer chaincode invoke --tls --cafile /opt/home/managedblockchain
 # Test Query
 #docker exec cli peer chaincode invoke --tls --cafile /opt/home/managedblockchain-tls-chain.pem --channelID $CHANNEL --name $CHAINCODENAME -c '{"Args":["queryUser","{\"username\": \"edge\"}"]}'
 
-shutdown now -h
+#shutdown now -h
 
 

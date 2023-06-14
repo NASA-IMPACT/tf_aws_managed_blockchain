@@ -12,7 +12,7 @@ resource "null_resource" "ecr-image-build-push" {
   provisioner "local-exec" {
     command = <<EOF
            aws ecr get-login-password --region ${var.region} | docker login --username AWS --password-stdin ${var.account_id}.dkr.ecr.${var.region}.amazonaws.com
-           docker build -t ${aws_ecr_repository.app-ecr.repository_url}:latest "${path.module}/../application/os-blockchain-api/"
+           docker build -t ${aws_ecr_repository.app-ecr.repository_url}:latest ${var.docker_file_path}
            docker push ${aws_ecr_repository.app-ecr.repository_url}:latest
        EOF
   }

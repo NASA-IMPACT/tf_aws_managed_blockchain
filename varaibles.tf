@@ -89,7 +89,7 @@ variable "ec2_cli_configuration" {
 }
 variable "s3_uri_bc_code" {
   description = "S3 URI of the chain code"
-   default = "s3://bc-chaincode-package/final.tar.gz" # Delete
+  default     = "s3://bc-chaincode-package/final.tar.gz" # Delete
 }
 #
 
@@ -109,34 +109,34 @@ variable "vpc_cidr" {
 
 variable "public_subnet_1_cidr" {
   description = "Public Subnet CIDR 1"
-  default = "10.0.1.0/24"
+  default     = "10.0.1.0/24"
 }
 
 variable "public_subnet_2_cidr" {
   description = "Public Subnet CIDR 2"
-  default = "10.0.2.0/24"
+  default     = "10.0.2.0/24"
 }
 
 variable "public_subnet_3_cidr" {
   description = "Public Subnet CIDR 3"
-  default = "10.0.3.0/24"
+  default     = "10.0.3.0/24"
 }
 
 
 variable "private_subnet_1_cidr" {
   description = "private Subnet CIDR 1"
-  default = "10.0.4.0/24"
+  default     = "10.0.4.0/24"
 }
 
 
 variable "private_subnet_2_cidr" {
   description = "private Subnet CIDR 2"
-  default = "10.0.5.0/24"
+  default     = "10.0.5.0/24"
 }
 
 variable "private_subnet_3_cidr" {
   description = "private Subnet CIDR 3"
-  default = "10.0.6.0/24"
+  default     = "10.0.6.0/24"
 }
 
 variable "ecs_domain_name" {
@@ -168,9 +168,9 @@ variable "task_memory" {
 }
 
 variable "ecs_environment" {
-  type = list(object({name = string, value = string}))
+  type = list(object({ name = string, value = string }))
   default = [{
-    name= "EXAMPLE",
+    name  = "EXAMPLE",
     value = "foo"
   }]
 }
@@ -178,3 +178,7 @@ variable "key_name" {
   default = null
 }
 
+
+variable "docker_file_path" {
+  type = string
+}
