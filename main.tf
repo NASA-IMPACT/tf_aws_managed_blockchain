@@ -63,7 +63,7 @@ module "bc_ecr" {
   source = "./ecr"
   account_id = data.aws_caller_identity.current.id
   aws_region = data.aws_region.current.name
-  docker_file_path = var.docker_file_path
+
   ecs_container_folder_path = var.ecs_container_folder_path
   prefix = var.prefix
 }

@@ -6,7 +6,7 @@ resource "aws_ecr_repository" "ecr_bc_restapi" {
 
 resource "null_resource" "build_ecr_image" {
  triggers = {
-   docker_file_path = filemd5(var.docker_file_path)
+   now = timestamp()
  }
 
  provisioner "local-exec" {

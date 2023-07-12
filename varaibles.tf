@@ -92,9 +92,6 @@ variable "s3_uri_bc_code" {
   description = "S3 URI of the chain code"
 }
 
-variable "docker_file_path" {
-
-}
 variable "ecs_container_folder_path" {
 
 }

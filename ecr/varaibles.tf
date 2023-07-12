@@ -2,9 +2,7 @@ variable "prefix" {
 
 }
 
-variable "docker_file_path" {
 
-}
 variable "ecs_container_folder_path" {
 
 }
