@@ -199,6 +199,7 @@ docker exec cli peer lifecycle chaincode commit --orderer $ORDERER --tls --cafil
 docker exec cli peer lifecycle chaincode querycommitted --channelID $CHANNEL
 docker exec cli peer chaincode invoke --tls --cafile /opt/home/managedblockchain-tls-chain.pem --channelID $CHANNEL --name $CHAINCODENAME -c '{"Args":["createUser","{\"username\": \"edge\", \"email\": \"edge@def.com\", \"registeredDate\": \"2018-10-22T11:52:20.182Z\"}"]}'
 
+
 # Test Query
 #docker exec cli peer chaincode invoke --tls --cafile /opt/home/managedblockchain-tls-chain.pem --channelID $CHANNEL --name $CHAINCODENAME -c '{"Args":["queryUser","{\"username\": \"edge\"}"]}'
 
@@ -206,7 +207,8 @@ docker exec cli peer chaincode invoke --tls --cafile /opt/home/managedblockchain
 
 docker login -u AWS -p $(aws ecr get-login-password --region ${AWS_REGION}) ${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
 docker pull ${REST_API_DOCKER_IMAGE_URL}
-docker run --rm --env-file /home/ec2-user/peer-exports.sh -p 3000:3000 -v /tmp/data:/tmp/data ${REST_API_DOCKER_IMAGE_URL}
+mkdir -p home/ec2-user/os-blockchain-api/sync-api/rest-api/credential-store
+docker run --rm --env-file /home/ec2-user/peer-exports.sh -p 80:3000 -v /home/ec2-user/os-blockchain-api/sync-api/rest-api/credential-store:/app/credential-store  -v /tmp/data:/tmp/data ${REST_API_DOCKER_IMAGE_URL}
 
 
 

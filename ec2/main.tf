@@ -2,6 +2,7 @@ data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
 
 
+
 resource "aws_instance" "ec2_instance" {
   ami                         = var.ami_id
   subnet_id                   = var.subnet_id
@@ -41,4 +42,10 @@ resource "aws_instance" "ec2_instance" {
 }
 
 
-
+resource "aws_eip" "lb" {
+  instance = aws_instance.ec2_instance.id
+  tags = {
+    Name        = "BC EIP ${var.tag_name}"
+  }
+  vpc      = true
+}

@@ -73,7 +73,6 @@ variable "tag_name" {
   default = "BC cli EC2"
 }
 
-
 variable "bc_peer_node_count" {
   description = "Number of peer nodes associated with the network"
   type        = number
@@ -88,6 +87,7 @@ variable "ec2_cli_configuration" {
     instance_type    = string
   }))
 }
+
 variable "s3_uri_bc_code" {
   description = "S3 URI of the chain code"
 }

@@ -97,6 +97,19 @@ module "ec2_client" {
   rest_api_docker_image_url = module.bc_ecr.rest_api_ecr_repo_url
   storage_bucket = var.storage_bucket
 }
+
+resource "aws_secretsmanager_secret" "bc_secrets" {
+  name = "${var.prefix}-secrets"
+
+
+  tags = {
+    name = var.prefix
+  }
+
+}
+
+
+
 module "vpc_endpoint" {
   source = "./vpc"
 

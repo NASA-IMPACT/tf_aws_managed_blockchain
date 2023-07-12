@@ -74,3 +74,4 @@ variable "rest_api_docker_image_url" {
 
 variable "storage_bucket" {
 }
+
