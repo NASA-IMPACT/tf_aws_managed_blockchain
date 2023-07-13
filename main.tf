@@ -120,7 +120,6 @@ module "platform" {
   ecs_environment       = concat([
     { name = "SECRET_SSM_NAME", value = local.aws_secret_manager_name },
     { name = "AWS_DEFAULT_REGION", value = local.aws_region},
-    { name = "TRIGGER_BUILD", value = sha1(join("", [for f in fileset(var.ecs_container_folder_path, "*") : filesha1("${var.ecs_container_folder_path}/${f}")])) }
     ], var.ecs_environment)
   prefix = var.prefix
   ecs_container_folder_path = var.ecs_container_folder_path
