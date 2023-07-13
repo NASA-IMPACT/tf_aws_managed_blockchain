@@ -178,3 +178,7 @@ variable "key_name" {
   default = null
 }
 
+variable "permissions_boundary" {
+  default = null
+}
+

@@ -1,8 +1,10 @@
+
 resource "aws_iam_role" "bc_ec2_role" {
   name                  = "${var.prefix}-bc_ec2_cli_g_role"
   description           = "bc role"
   assume_role_policy    = data.aws_iam_policy_document.assume_role.json
   path                  = "/"
+  permissions_boundary = var.permissions_boundary
 
 
   tags = {

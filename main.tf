@@ -65,9 +65,11 @@ module "security_groups" {
   vpc_id = module.network.vpv_id
   prefix = var.prefix
 }
+
 module "ec2_iam_role" {
   source = "./iam"
   prefix = var.prefix
+  permissions_boundary = var.permissions_boundary
 }
 
 
@@ -123,6 +125,7 @@ module "platform" {
     ], var.ecs_environment)
   prefix = var.prefix
   ecs_container_folder_path = var.ecs_container_folder_path
+  permissions_boundary = var.permissions_boundary
 }
 
 

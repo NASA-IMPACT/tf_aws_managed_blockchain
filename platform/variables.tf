@@ -40,3 +40,7 @@ variable "ecs_environment" {
 
 variable "ecs_container_folder_path" {
 }
+
+variable "permissions_boundary" {
+
+}
