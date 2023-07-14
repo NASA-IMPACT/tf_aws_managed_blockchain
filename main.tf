@@ -75,6 +75,7 @@ module "ec2_iam_role" {
 
 module "ec2_client" {
   for_each             = local.channel_map
+  depends_on = [module.blockchain]
   source               = "./ec2"
   ami_id               = var.ami_id
   prefix               = var.prefix

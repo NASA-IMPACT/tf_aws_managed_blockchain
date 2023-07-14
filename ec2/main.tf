@@ -35,6 +35,7 @@ resource "aws_instance" "ec2_instance" {
     AWS_REGION = data.aws_region.current.name
     ACCOUNT_ID = data.aws_caller_identity.current.id
     SECRET_SSM_NAME = var.secret_ssm_name
+    TRIGGER_BUILD = timestamp()
   })
   vpc_security_group_ids = var.security_groups_list
 }

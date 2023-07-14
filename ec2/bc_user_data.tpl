@@ -29,6 +29,7 @@ CaEndpoint=$(aws managedblockchain get-member --region ${REGION}  --network-id $
 nodeID=${MEMEBERNODEID}
 peerEndpoint=$(aws managedblockchain get-node --region ${REGION}  --network-id ${NETWORKID}  --member-id ${MEMBERID}  --node-id $nodeID --query 'Node.FrameworkAttributes.Fabric.PeerEndpoint' --output text)
 peerEventEndpoint=$(aws managedblockchain get-node --region ${REGION}  --network-id ${NETWORKID}  --member-id ${MEMBERID}  --node-id $nodeID --query 'Node.FrameworkAttributes.Fabric.PeerEventEndpoint' --output text)
+
 # Exports to be exported before executing any Fabric 'peer' commands via the CLI
 cat << EXPORT_ENVS > /tmp/peer-exports.sh
 NETWORKNAME=${NETWORKNAME}
@@ -55,6 +56,7 @@ CAFILE=/opt/home/managedblockchain-tls-chain.pem
 CHAINCODENAME=${CHANNELCODENAME}
 CHAINCODEVERSION=v0
 CHAINCODEDIR=github.com/chaincode_example02/go
+TRIGGER_BUILD=${TRIGGER_BUILD}
 EXPORT_ENVS
 source /tmp/peer-exports.sh
 cat << EOFDOCKER > /tmp/docker-compose-cli.yaml
@@ -95,7 +97,7 @@ git clone --branch v2.2.3 https://github.com/hyperledger/fabric-samples.git
 aws s3 cp s3://us-east-1.managedblockchain/etc/managedblockchain-tls-chain.pem  /home/ec2-user/managedblockchain-tls-chain.pem
 source /home/ec2-user/peer-exports.sh
 echo "Creating Secret Manager"
-aws secretsmanager create-secret --name ${SECRET_SSM_NAME} --region us-east-1 --secret-string file:///tmp/peer-exports.sh
+aws secretsmanager create-secret --name ${SECRET_SSM_NAME} --region ${REGION} --secret-string file:///tmp/peer-exports.sh
 curl https://\$CASERVICEENDPOINT/cainfo -k
 mkdir -p /home/ec2-user/go/src/github.com/hyperledger/fabric-ca
 cd /home/ec2-user/go/src/github.com/hyperledger/fabric-ca
@@ -204,6 +206,6 @@ docker exec cli peer chaincode invoke --tls --cafile /opt/home/managedblockchain
 # Test Query
 #docker exec cli peer chaincode invoke --tls --cafile /opt/home/managedblockchain-tls-chain.pem --channelID $CHANNEL --name $CHAINCODENAME -c '{"Args":["queryUser","{\"username\": \"edge\"}"]}'
 
-# shutdown now -h
+shutdown now -h
 
 
